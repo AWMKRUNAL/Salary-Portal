@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Salary Slip</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            width: 80%;
+            max-width: 800px;
+            margin: 0 auto;
+            border: 1px solid #000;
+            padding: 20px;
+            line-height: 1.6;
+            background: #fff;
+        }
+        /* Compact Header Section: Flexbox Layout */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        /* Left Section with Logo */
+        .header-left .logo {
+            width: 80px; /* Adjusted logo size */
+            height: auto;
+        }
+        /* Right Section with Company Details */
+        .header-right {
+            text-align: right;
+            font-size: 14px; /* Slightly smaller font for compactness */
+            line-height: 1.4; /* Reduced line spacing */
+        }
+        .header-right h1 {
+            margin: 0;
+            font-size: 20px; /* Subtle size increase for title */
+            color: #000;
+        }
+        .header-right p {
+            margin: 2px 0; /* Compact space between address lines */
+            color: #444;
+        }
+
+        /* Section Styling */
+        .section {
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-size: 16px; /* Optimized title size */
+            margin-bottom: 10px;
+            font-weight: bold;
+            text-align: left;
+            background-color: #f2f2f2;
+            padding: 8px;
+            text-transform: uppercase;
+            border-left: 5px solid #007BFF;
+        }
+
+        /* Employee Details: Two-Column Layout */
+        .employee-details {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        .employee-details .column {
+            width: 48%; /* Two columns, each taking up half the width */
+            padding: 5px;
+            box-sizing: border-box;
+        }
+        .employee-details table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .employee-details td {
+            padding: 8px 5px;
+            font-size: 14px; /* Optimized font size */
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+        .employee-details td.field {
+            font-weight: bold;
+            color: #555;
+        }
+        .employee-details td.value {
+            color: #000;
+        }
+
+        /* Tables (Earnings & Deductions) */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            font-size: 14px;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            color: #333;
+        }
+        td {
+            color: #555;
+        }
+
+        /* Summary Section */
+        .summary .row {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+            font-size: 16px; /* Slightly larger for emphasis */
+            font-weight: bold;
+        }
+
+        /* Print Button Styling */
+        .print-btn {
+            display: block;
+            width: 200px;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: #fff;
+            text-align: center;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        .print-btn:hover {
+            background-color: #0056b3;
+        }
+
+        /* Footer Section */
+        .footer {
+            text-align: center;
+            font-size: 12px; /* Slightly smaller footer text */
+            color: #444;
+            margin-top: 20px;
+        }
+    </style>
+    <script>
+        function printPage() {
+            window.print();
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <!-- Compact Header Section -->
+        <div class="header">
+            <!-- Left: Logo -->
+            <div class="header-left">
+                <img src="https://companieslogo.com/img/orig/ADANIPOWER.NS-1427c780.png?download-true.png"
+                     alt="Adani Logo" class="logo">
+            </div>
+            <!-- Right: Company Details -->
+            <div class="header-right">
+                <h1>Adani Resources Private Limited</h1>
+                <p>Gare Pelma III Collieries Limited</p>
+                <p>Service Building, Near Banjari Mandir, Milupara</p>
+                <p>Tehshil - Tamnar, Dist - Raigarh (C.G.) 496107</p>
+            </div>
+        </div>
+
+        <!-- Employee Details Section -->
+        <div class="section">
+            <div class="section-title">Employee Details</div>
+            <div class="employee-details">
+                <!-- Left Column -->
+                <div class="column">
+                    <table>
+                        {% for key, value in emp_details_left.items() %}
+                        <tr>
+                            <td class="field">{{ key.replace('_', ' ') }}</td>
+                            <td class="value">{{ value }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+                <!-- Right Column -->
+                <div class="column">
+                    <table>
+                        {% for key, value in emp_details_right.items() %}
+                        <tr>
+                            <td class="field">{{ key.replace('_', ' ') }}</td>
+                            <td class="value">{{ value }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Earnings Section -->
+        <div class="section">
+            <div class="section-title">Earnings</div>
+            <table>
+                <tr>
+                    <th>Earning</th>
+                    <th>Amount</th>
+                </tr>
+                {% for key, value in earnings.items() %}
+                <tr>
+                    <td>{{ key.replace("_", " ").capitalize() }}</td>
+                    <td>{{ value | int }}</td>
+                </tr>
+                {% endfor %}
+                <tr>
+                    <th>Gross Pay</th>
+                    <th>{{ gross | int }}</th>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Deductions Section -->
+        <div class="section">
+            <div class="section-title">Deductions</div>
+            <table>
+                <tr>
+                    <th>Deduction</th>
+                    <th>Amount</th>
+                </tr>
+                {% for key, value in deductions.items() %}
+                <tr>
+                    <td>{{ key.replace("_", " ").capitalize() }}</td>
+                    <td>{{ value | int }}</td>
+                </tr>
+                {% endfor %}
+                <tr>
+                    <th>Total Deductions</th>
+                    <th>{{ deductions.values() | sum | int }}</th>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Net Pay Section -->
+        <div class="section summary">
+            <h3>Net Pay Details</h3>
+            <div class="row">
+                <p><strong>{{ net_pay_text_1 }}</strong></p>
+                <p><strong>{{ net_pay_text_2 }}</strong></p>
+                <p><strong>{{ net_pay_text_3 }}</strong></p>
+            </div>
+        </div>
+
+        <!-- Print Button -->
+        <button class="print-btn" onclick="printPage()">Print</button>
+
+        <!-- Footer Section -->
+        <div class="footer">
+            <p>Adani Resources Private Limited</p>
+            <p>** Computer generated document. No signature required. **</p>
+        </div>
+    </div>
+</body>
+</html>
