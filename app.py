@@ -88,10 +88,12 @@ def validate_input(emp_code, month, df):
 
         # Validate Employee Code exists
         emp_code = str(emp_code)  # Ensure emp_code is treated as a string
+        print("Unique Employee Codes:", df["emp code"].astype(str).unique())  # Debug
         if emp_code not in df["emp code"].astype(str).unique():
             return f"Employee Code '{emp_code}' not found in the file."
 
         # Validate Salary Month exists
+        print("Unique Months:", df["month"].astype(str).unique())  # Debug
         if month not in df["month"].astype(str).unique():
             return f"Salary Month '{month}' is invalid or not found in the file."
 
