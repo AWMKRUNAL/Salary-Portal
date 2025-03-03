@@ -8,42 +8,44 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            margin: 0;
+            padding: 0;
         }
+
         .container {
-            width: 80%;
-            max-width: 800px;
+            width: 100%; /* Full width to fit A4 page */
+            max-width: 100%; /* Allow expansion to the printable size */
             margin: 0 auto;
             border: 1px solid #000;
             padding: 20px;
+            box-sizing: border-box; /* Includes border and padding in width calculation */
             line-height: 1.6;
             background: #fff;
         }
-        /* Compact Header Section: Flexbox Layout */
+
+        /* Header Section */
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
         }
-        /* Left Section with Logo */
         .header-left .logo {
-            width: 80px; /* Adjusted logo size */
+            width: 80px;
             height: auto;
         }
-        /* Right Section with Company Details */
         .header-right {
             text-align: right;
-            font-size: 14px; /* Slightly smaller font for compactness */
-            line-height: 1.4; /* Reduced line spacing */
+            font-size: 14px;
+            line-height: 1.4;
         }
         .header-right h1 {
             margin: 0;
-            font-size: 20px; /* Subtle size increase for title */
+            font-size: 20px;
             color: #000;
         }
         .header-right p {
-            margin: 2px 0; /* Compact space between address lines */
+            margin: 2px 0;
             color: #444;
         }
 
@@ -52,7 +54,7 @@
             margin-bottom: 20px;
         }
         .section-title {
-            font-size: 16px; /* Optimized title size */
+            font-size: 16px;
             margin-bottom: 10px;
             font-weight: bold;
             text-align: left;
@@ -62,14 +64,14 @@
             border-left: 5px solid #007BFF;
         }
 
-        /* Employee Details: Two-Column Layout */
+        /* Employee Details */
         .employee-details {
             display: flex;
             flex-wrap: wrap;
             justify-content: space-between;
         }
         .employee-details .column {
-            width: 48%; /* Two columns, each taking up half the width */
+            width: 48%; /* Two columns taking half the width */
             padding: 5px;
             box-sizing: border-box;
         }
@@ -79,9 +81,8 @@
         }
         .employee-details td {
             padding: 8px 5px;
-            font-size: 14px; /* Optimized font size */
+            font-size: 14px;
             border: 1px solid #ccc;
-            text-align: left;
         }
         .employee-details td.field {
             font-weight: bold;
@@ -119,7 +120,7 @@
             display: flex;
             justify-content: space-between;
             margin: 15px 0;
-            font-size: 16px; /* Slightly larger for emphasis */
+            font-size: 16px;
             font-weight: bold;
         }
 
@@ -145,9 +146,42 @@
         /* Footer Section */
         .footer {
             text-align: center;
-            font-size: 12px; /* Slightly smaller footer text */
+            font-size: 12px;
             color: #444;
             margin-top: 20px;
+        }
+
+        /* Print Styles */
+        @media print {
+            @page {
+                size: A4; /* A4 paper size */
+                margin: 10mm; /* Narrow margins */
+            }
+
+            body {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+            }
+
+            .container {
+                width: 100%;
+                max-width: 100%;
+                padding: 20px;
+                margin: 0;
+            }
+
+            .print-btn {
+                display: none; /* Hide print button during printing */
+            }
+
+            .header, .section, .footer {
+                page-break-inside: avoid; /* Prevent breaks inside sections */
+            }
+
+            table {
+                width: 100%; /* Expand tables to full width */
+            }
         }
     </style>
     <script>
@@ -158,14 +192,11 @@
 </head>
 <body>
     <div class="container">
-        <!-- Compact Header Section -->
         <div class="header">
-            <!-- Left: Logo -->
             <div class="header-left">
                 <img src="https://companieslogo.com/img/orig/ADANIPOWER.NS-1427c780.png?download-true.png"
                      alt="Adani Logo" class="logo">
             </div>
-            <!-- Right: Company Details -->
             <div class="header-right">
                 <h1>Adani Resources Private Limited</h1>
                 <p>Gare Pelma III Collieries Limited</p>
@@ -175,69 +206,70 @@
         </div>
 
         <!-- Employee Details Section -->
-        <div class="section">
-            <div class="section-title">Employee Details</div>
-            <div class="employee-details">
-                <!-- Left Column -->
-                <div class="column">
-                    <table>
-                        {% for key, value in emp_details_left.items() %}
-                        <tr>
-                            <td class="field">{{ key.replace('_', ' ') }}</td>
-                            <td class="value">{{ value }}</td>
-                        </tr>
-                        {% endfor %}
-                    </table>
-                </div>
-                <!-- Right Column -->
-                <div class="column">
-                    <table>
-                        {% for key, value in emp_details_right.items() %}
-                        <tr>
-                            <td class="field">{{ key.replace('_', ' ') }}</td>
-                            <td class="value">{{ value }}</td>
-                        </tr>
-                        {% endfor %}
-                    </table>
-                </div>
-            </div>
-        </div>
+<div class="section">
+    <div class="section-title">Employee Details</div>
+    <table>
+        {% set details_list = emp_details.items()|list %}
+        {% for i in range(0, details_list|length, 2) %}
+        <tr>
+            <td>{{ details_list[i][0] }}</td>
+            <td>{{ details_list[i][1] }}</td>
+            {% if i + 1 < details_list|length %}
+            <td>{{ details_list[i + 1][0] }}</td>
+            <td>{{ details_list[i + 1][1] }}</td>
+            {% else %}
+            <td></td>
+            <td></td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+    </table>
+</div>
 
-        <!-- Earnings Section -->
-        <div class="section">
-            <div class="section-title">Earnings</div>
-            <table>
-                <tr>
-                    <th>Earning</th>
-                    <th>Amount</th>
-                </tr>
-                {% for key, value in earnings.items() %}
-                <tr>
-                    <td>{{ key.replace("_", " ").capitalize() }}</td>
-                    <td>{{ value | int }}</td>
-                </tr>
-                {% endfor %}
-                <tr>
-                    <th>Gross Pay</th>
-                    <th>{{ gross | int }}</th>
-                </tr>
-            </table>
-        </div>
-
+<!-- Earnings Section -->
+<div class="section">
+    <div class="section-title">Earnings</div>
+    <table>
+        <tr>
+            <th>Earning</th>
+            <th>Amount</th>
+            <th>Earning</th>
+            <th>Amount</th>
+        </tr>
+        {% set earnings_list = earnings.items()|list %}
+        {% for i in range(0, earnings_list|length, 2) %}
+        <tr>
+            <td>{{ earnings_list[i][0] }}</td>
+            <td>{{ earnings_list[i][1] }}</td>
+            {% if i + 1 < earnings_list|length %}
+            <td>{{ earnings_list[i + 1][0] }}</td>
+            <td>{{ earnings_list[i + 1][1] }}</td>
+            {% else %}
+            <td></td>
+            <td></td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+        <tr>
+            <th colspan="3" style="text-align: left;">Gross Pay</th>
+            <th>{{ gross | int }}</th>
+        </tr>
+    </table>
+</div>
         <!-- Deductions Section -->
         <div class="section">
-            <div class="section-title">Deductions</div>
-            <table>
-                <tr>
-                    <th>Deduction</th>
-                    <th>Amount</th>
-                </tr>
-                {% for key, value in deductions.items() %}
-                <tr>
-                    <td>{{ key.replace("_", " ").capitalize() }}</td>
-                    <td>{{ value | int }}</td>
-                </tr>
-                {% endfor %}
+    <div class="section-title">Deductions</div>
+    <table>
+        <tr>
+            <th>Deduction</th>
+            <th>Amount</th>
+        </tr>
+        {% for deduction, amount in deductions.items() %}
+        <tr>
+            <td>{{ deduction }}</td>
+            <td>{{ amount }}</td>
+        </tr>
+        {% endfor %}
                 <tr>
                     <th>Total Deductions</th>
                     <th>{{ deductions.values() | sum | int }}</th>
@@ -246,14 +278,27 @@
         </div>
 
         <!-- Net Pay Section -->
-        <div class="section summary">
-            <h3>Net Pay Details</h3>
-            <div class="row">
-                <p><strong>{{ net_pay_text_1 }}</strong></p>
-                <p><strong>{{ net_pay_text_2 }}</strong></p>
-                <p><strong>{{ net_pay_text_3 }}</strong></p>
-            </div>
-        </div>
+        <div class="section">
+    <div class="section-title">Net Pay Summary</div>
+    <table>
+        <tr>
+            <th>Description</th>
+            <th>Amount</th>
+        </tr>
+        <tr>
+            <td>Gross Pay</td>
+            <td>{{ gross | int }}</td>
+        </tr>
+        <tr>
+            <td>Total Deductions</td>
+            <td>{{ deductions.values() | sum }}</td>
+        </tr>
+        <tr>
+            <th>Net Pay</th>
+            <th style="font-size: 1.2em; font-weight: bold;">{{ net_pay | int }}</th>
+        </tr>
+    </table>
+</div>
 
         <!-- Print Button -->
         <button class="print-btn" onclick="printPage()">Print</button>
