@@ -5,15 +5,45 @@ from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
-# Path to the default master CSV file
-master_csv_path = "Salary_Slip_Master_Data.xlsx"
-UPLOAD_FOLDER = os.path.join(app.root_path, 'uploads')
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)  # Ensure upload folder exists
 
+# Default path to the master file
+DEFAULT_MASTER_FILE = "Salary_Slip_Master_Data.xlsx"
+UPLOAD_FOLDER = os.path.join(app.root_path, 'uploads')
+CONFIG_FILE = os.path.join(app.root_path, "config.txt")  # Path to store persisted file path
+
+# Ensure upload folder exists
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+
+def get_master_file_path():
+    """
+    Reads the persisted master file path from the config file.
+    If the config file doesn't exist, default to DEFAULT_MASTER_FILE.
+    """
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, "r") as f:
+            path = f.read().strip()
+            if os.path.exists(path):  # Ensure the file still exists
+                return path
+    # Default to the predefined master file path
+    return os.path.join(UPLOAD_FOLDER, DEFAULT_MASTER_FILE)
+
+
+def save_master_file_path(path):
+    """
+    Saves the given master file path to the config file for persistence.
+    """
+    with open(CONFIG_FILE, "w") as f:
+        f.write(path)
+
+
+# Initialize the master CSV path
+master_csv_path = get_master_file_path()
 
 
 @app.route("/", methods=["GET", "POST"])
 def index():
+    global master_csv_path  # Access the global master file path variable
     if request.method == "POST":
         emp_code = request.form["emp_code"]
         month = request.form["month"]
@@ -21,10 +51,10 @@ def index():
 
         # If a file is uploaded
         if file and file.filename:
-            # Save the uploaded file to persist as master
-            global master_csv_path  # Update the global master file path
-            master_csv_path = os.path.join(UPLOAD_FOLDER, "Salary_Slip_Master_Data.xlsx")
+            # Save the uploaded file to persist as the master file
+            master_csv_path = os.path.join(UPLOAD_FOLDER, secure_filename("Salary_Slip_Master_Data.xlsx"))
             file.save(master_csv_path)  # Save file permanently in the uploads directory
+            save_master_file_path(master_csv_path)  # Persist this path to the config file
             print(f"Uploaded file is now set as the master file: {master_csv_path}")  # Debug
 
         # Ensure the master file exists
@@ -47,7 +77,6 @@ def index():
             )
 
     return render_template("index.html")
-
 
 
 def validate_input(emp_code, month, file_path):
@@ -96,11 +125,6 @@ def validate_input(emp_code, month, file_path):
     return None
 
 
-import os
-import pandas as pd
-from flask import render_template
-
-
 def generate_salary_slip(emp_code, month, file_path, upload_folder):
     try:
         # Detect file extension to determine how to read the file
@@ -127,16 +151,37 @@ def generate_salary_slip(emp_code, month, file_path, upload_folder):
         # Extract data for the slip (use only the first matching record if multiple exist)
         emp_data = emp_data.iloc[0]
 
+        # ------- Map for Display Fields -------
+        FIELD_DISPLAY_NAMES = {
+            "emp code": "Employee Code",
+            "employee name": "Employee Name",
+            "uan no": "UAN",
+            "doj": "DOJ",
+            "standard days": "Standard Days",
+            "paid days": "Paid Days",
+            "lwp": "LWP",
+            "pan no": "PAN",
+            "adhaar no": "Aadhaar Number",
+            "ifsc code": "IFSC Code",
+            "hra": "HRA",
+            "cmpf": "CMPF",
+            "family pension fund": "Family Pension Fund",
+            "epf": "EPF",
+            "account no.": "Account Number"
+        }
+
         # ------- Employee Details -------
-        # Ensure all required details populate correctly
         employee_details_columns = [
             "month", "emp code", "employee name", "department", "location",
             "uan no", "doj", "grade", "section", "standard days", "paid days",
             "lwp", "pan no", "adhaar no", "account no.", "ifsc code", "paymode"
         ]
-        # Normalize keys for the template and extract column values
+        # Format employee details with display names and adjusted values
         employee_details = {
-            col.replace(" ", "_").capitalize(): emp_data.get(col, "-")
+            FIELD_DISPLAY_NAMES.get(col.lower(), col.replace(" ", "_").capitalize()): (
+                str(emp_data.get(col, "")).split(" ")[0]  # Format date fields
+                if col.lower() in ["doj"] else emp_data.get(col, "-")
+            )
             for col in employee_details_columns
         }
 
@@ -147,16 +192,19 @@ def generate_salary_slip(emp_code, month, file_path, upload_folder):
             "stipend", "incentive", "re-location allowance/joining exp/medical checkup",
             "other earnings"
         ]
-        earnings = {col.capitalize(): int(float(emp_data.get(col, 0))) for col in earning_columns}  # Convert to integer
-        gross_pay = sum(earnings.values())  # Sum up all earnings
+        earnings = {
+            FIELD_DISPLAY_NAMES.get(col.lower(), col.capitalize()): int(float(emp_data.get(col, 0)))
+            for col in earning_columns
+        }
+        gross_pay = sum(earnings.values())  # Calculate gross pay
 
         # ------- Deductions -------
-        deduction_columns = [
-            "cmpf", "family pension fund", "epf"
-        ]
-        deductions = {col.capitalize(): int(float(emp_data.get(col, 0))) for col in
-                      deduction_columns}  # Convert to integer
-        total_deductions = sum(deductions.values())  # Sum up all deductions
+        deduction_columns = ["cmpf", "family pension fund", "epf", "recovery"]
+        deductions = {
+            FIELD_DISPLAY_NAMES.get(col.lower(), col.capitalize()): int(float(emp_data.get(col, 0)))
+            for col in deduction_columns
+        }
+        total_deductions = sum(deductions.values())  # Calculate total deductions
 
         # ------- Net Pay Calculation -------
         net_pay = gross_pay - total_deductions
@@ -164,19 +212,13 @@ def generate_salary_slip(emp_code, month, file_path, upload_folder):
         net_pay_text_2 = f"{gross_pay} - {total_deductions} = {net_pay}"
         net_pay_text_3 = f"{net_pay}"
 
-        # ------- Split Employee Details for Two-Column Layout -------
-        emp_details_items = list(employee_details.items())
-        emp_details_left = dict(emp_details_items[:len(emp_details_items) // 2])  # First half of the items
-        emp_details_right = dict(emp_details_items[len(emp_details_items) // 2:])  # Second half of the items
-
         # ------- Generate HTML using Jinja template -------
         html_content = render_template(
             "salary_slip.html",
-            emp_details_left=emp_details_left,  # Left column of employee details
-            emp_details_right=emp_details_right,  # Right column of employee details
-            earnings=earnings,  # Earnings data
-            deductions=deductions,  # Deductions data
-            gross=gross_pay,  # Gross pay
+            emp_details=employee_details,
+            earnings=earnings,
+            deductions=deductions,
+            gross=gross_pay,
             net_pay_text_1=net_pay_text_1,
             net_pay_text_2=net_pay_text_2,
             net_pay_text_3=net_pay_text_3,
@@ -193,12 +235,8 @@ def generate_salary_slip(emp_code, month, file_path, upload_folder):
         return output_path
 
     except Exception as e:
-        # Graceful error handling with error logging
         print(f"Error generating salary slip: {e}")
         return None
-
-
-
 
 
 if __name__ == "__main__":
