@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SalarySlipSmart 3s</title>
+    <title>On the Go Salary</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
 
         /* Root Styling */
         :root {
-            --primary-color: #5E35B1; /* Dark Violet */
-            --secondary-color: #4527A0; /* Deeper Violet */
-            --accent-color: #FFB74D; /* Soft Orange */
-            --background-color: #F3E5F5; /* Very light lavender */
+            --primary-color: #2C3E50; /* Dark Blue */
+            --secondary-color: #34495E; /* Deeper Blue */
+            --accent-color: #E74C3C; /* Soft Red */
+            --background-color: #ECF0F1; /* Light Gray */
             --container-bg: rgba(255, 255, 255, 0.95); /* Translucent white for container */
             --text-color: #333333; /* Dark Gray */
             --border-color: #DDDDDD; /* Light Border Gray */
@@ -100,7 +100,7 @@
         input:focus {
             border-color: var(--primary-color);
             outline: none;
-            box-shadow: 0 0 4px rgba(94, 53, 177, 0.4);
+            box-shadow: 0 0 4px rgba(44, 62, 80, 0.4);
         }
 
         button {
@@ -114,7 +114,7 @@
         }
 
         button:hover {
-            background-color: var(--secondary-color);
+            background-color: var(--accent-color);
         }
 
         /* Footer Styles */
@@ -156,30 +156,35 @@
     <!-- Header -->
     <header>
         <img src="https://companieslogo.com/img/orig/ADANIPOWER.NS-1427c780.png?download-true.png" alt="Adani Logo">
-        <h1>SalarySlipSmart 3s</h1>
+        <h1>On the Go Salary</h1>
     </header>
 
     <!-- Form Container -->
     <div class="container">
         <h2>Generate Your Salary Slip</h2>
         <form action="/" method="POST" enctype="multipart/form-data">
-    <label for="emp_code">Employee ID:</label>
-    <input type="number" id="emp_code" name="emp_code" placeholder="Enter Employee ID" step="1" required>
+            <label for="emp_code">Employee ID:</label>
+            <input type="number" id="emp_code" name="emp_code" placeholder="Enter your Employee ID" step="1" required>
 
-    <label for="month">Salary Month:</label>
-    <input type="text" id="month" name="month" placeholder="e.g., December" required>
+            <label for="month">Salary Month:</label>
+            <input type="text" id="month" name="month" placeholder="e.g., December 2023" required>
 
-    <label for="file">Upload Excel File (Optional):</label>
-    <input type="file" id="file" name="file" accept=".xls, .xlsx">
+            <label for="file">Upload Excel File:</label>
+            <input type="file" id="file" name="file" accept=".xls, .xlsx">
 
-    <button type="submit">Generate Salary Slip</button>
-</form>
+            <button type="submit">Generate Salary Slip</button>
+        </form>
     </div>
 
     <!-- Footer -->
     <footer>
-        <p>© 2023 Adani Technology Department. All Rights Reserved.</p>
+        <p>© <span id="year"></span> Adani Technology Department. All Rights Reserved.</p>
         <p>Powered by <strong>Adani Technology</strong></p>
     </footer>
+
+    <script>
+        // Dynamically update the copyright year
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
 </body>
 </html>
