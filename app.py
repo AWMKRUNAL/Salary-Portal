@@ -10,10 +10,13 @@ master_csv_path = "Salary_Slip_Master_Data.xlsx"
 UPLOAD_FOLDER = os.path.join(app.root_path, 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)  # Ensure upload folder exists
 
-
+# Global variable to store data
+data_frame = None
 
 @app.route("/", methods=["GET", "POST"])
 def index():
+    global data_frame  # Use the global data_frame variable
+
     if request.method == "POST":
         emp_code = request.form["emp_code"]
         month = request.form["month"]
@@ -27,17 +30,20 @@ def index():
             file.save(master_csv_path)  # Save file permanently in the uploads directory
             print(f"Uploaded file is now set as the master file: {master_csv_path}")  # Debug
 
+            # Load the data into the global data_frame
+            data_frame = load_data(master_csv_path)
+
         # Ensure the master file exists
-        if not os.path.exists(master_csv_path):
+        if data_frame is None:
             return "The file 'Salary_Slip_Master_Data.xlsx' could not be found. Please ensure the file exists or upload it."
 
         # Validate employee code and month
-        validation_error = validate_input(emp_code, month, master_csv_path)
+        validation_error = validate_input(emp_code, month, data_frame)
         if validation_error:
             return validation_error  # Show validation error to the user
 
         # Generate salary slip if validation succeeds
-        salary_slip = generate_salary_slip(emp_code, month, master_csv_path, UPLOAD_FOLDER)
+        salary_slip = generate_salary_slip(emp_code, month, data_frame, UPLOAD_FOLDER)
         if salary_slip:
             return send_file(salary_slip, as_attachment=True)
         else:
@@ -48,24 +54,27 @@ def index():
 
     return render_template("index.html")
 
+def load_data(file_path):
+    """
+    Loads data from the given file path into a DataFrame.
+    """
+    try:
+        _, file_extension = os.path.splitext(file_path)
+        if file_extension == ".csv":
+            return pd.read_csv(file_path)
+        elif file_extension in [".xls", ".xlsx"]:
+            return pd.read_excel(file_path)
+        else:
+            raise ValueError("Unsupported file format. Please upload a valid CSV or Excel file.")
+    except Exception as e:
+        print(f"Error loading data: {e}")
+        return None
 
-
-def validate_input(emp_code, month, file_path):
+def validate_input(emp_code, month, df):
     """
     Validates whether the given Employee Code and Salary Month exist in the data.
     """
     try:
-        # Detect file extension to determine how to read the file
-        _, file_extension = os.path.splitext(file_path)
-
-        # Load the file based on its type
-        if file_extension == ".csv":
-            df = pd.read_csv(file_path)
-        elif file_extension in [".xls", ".xlsx"]:
-            df = pd.read_excel(file_path)
-        else:
-            return "Unsupported file format. Please upload a valid CSV or Excel file."
-
         # Normalize column names: strip whitespace and convert to lowercase
         df.columns = df.columns.str.strip().str.lower()
         print("Columns in the file (after normalization):", df.columns.tolist())  # Debug
@@ -86,8 +95,6 @@ def validate_input(emp_code, month, file_path):
         if month not in df["month"].astype(str).unique():
             return f"Salary Month '{month}' is invalid or not found in the file."
 
-    except FileNotFoundError:
-        return f"The file '{file_path}' could not be found. Please ensure the file exists."
     except Exception as e:
         print(f"Error validating input: {e}")
         return "An error occurred while processing the file. Please check its format."
@@ -95,24 +102,8 @@ def validate_input(emp_code, month, file_path):
     # If validations pass, return None
     return None
 
-
-import os
-import pandas as pd
-from flask import render_template
-
-
-def generate_salary_slip(emp_code, month, file_path, upload_folder):
+def generate_salary_slip(emp_code, month, df, upload_folder):
     try:
-        # Detect file extension to determine how to read the file
-        _, file_extension = os.path.splitext(file_path)
-
-        if file_extension == ".csv":
-            df = pd.read_csv(file_path)
-        elif file_extension in [".xls", ".xlsx"]:
-            df = pd.read_excel(file_path)
-        else:
-            raise ValueError("Unsupported file format. Must be .csv, .xls, or .xlsx.")
-
         # Normalize column names to lowercase
         df.columns = df.columns.str.strip().str.lower()
 
@@ -136,7 +127,7 @@ def generate_salary_slip(emp_code, month, file_path, upload_folder):
         ]
         # Normalize keys for the template and extract column values
         employee_details = {
-            col.replace(" ", "_").capitalize(): emp_data.get(col, "-")
+            col.replace(" ", "_").capitalize(): emp_data.get(col, "-").split()[0] if col == "doj" else emp_data.get(col, "-")
             for col in employee_details_columns
         }
 
@@ -152,7 +143,7 @@ def generate_salary_slip(emp_code, month, file_path, upload_folder):
 
         # ------- Deductions -------
         deduction_columns = [
-            "cmpf", "family pension fund", "epf"
+            "cmpf", "family pension fund", "epf", "recovery"
         ]
         deductions = {col.capitalize(): int(float(emp_data.get(col, 0))) for col in
                       deduction_columns}  # Convert to integer
@@ -169,12 +160,18 @@ def generate_salary_slip(emp_code, month, file_path, upload_folder):
         emp_details_left = dict(emp_details_items[:len(emp_details_items) // 2])  # First half of the items
         emp_details_right = dict(emp_details_items[len(emp_details_items) // 2:])  # Second half of the items
 
+        # ------- Split Earnings for Two-Column Layout -------
+        earnings_items = list(earnings.items())
+        earnings_left = dict(earnings_items[:len(earnings_items) // 2])  # First half of the items
+        earnings_right = dict(earnings_items[len(earnings_items) // 2:])  # Second half of the items
+
         # ------- Generate HTML using Jinja template -------
         html_content = render_template(
             "salary_slip.html",
             emp_details_left=emp_details_left,  # Left column of employee details
             emp_details_right=emp_details_right,  # Right column of employee details
-            earnings=earnings,  # Earnings data
+            earnings_left=earnings_left,  # Left column of earnings
+            earnings_right=earnings_right,  # Right column of earnings
             deductions=deductions,  # Deductions data
             gross=gross_pay,  # Gross pay
             net_pay_text_1=net_pay_text_1,
@@ -196,10 +193,6 @@ def generate_salary_slip(emp_code, month, file_path, upload_folder):
         # Graceful error handling with error logging
         print(f"Error generating salary slip: {e}")
         return None
-
-
-
-
 
 if __name__ == "__main__":
     app.run(debug=True)
