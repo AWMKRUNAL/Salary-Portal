@@ -142,13 +142,6 @@
             background-color: #0056b3;
         }
 
-        /* Hide print button during printing */
-        @media print {
-            .print-btn {
-                display: none;
-            }
-        }
-
         /* Footer Section */
         .footer {
             text-align: center;
@@ -213,34 +206,22 @@
         <!-- Earnings Section -->
         <div class="section">
             <div class="section-title">Earnings</div>
-            <div class="employee-details">
-                <!-- Left Column -->
-                <div class="column">
-                    <table>
-                        {% for key, value in earnings_left.items() %}
-                        <tr>
-                            <td>{{ key.replace("_", " ").capitalize() }}</td>
-                            <td>{{ value | int }}</td>
-                        </tr>
-                        {% endfor %}
-                    </table>
-                </div>
-                <!-- Right Column -->
-                <div class="column">
-                    <table>
-                        {% for key, value in earnings_right.items() %}
-                        <tr>
-                            <td>{{ key.replace("_", " ").capitalize() }}</td>
-                            <td>{{ value | int }}</td>
-                        </tr>
-                        {% endfor %}
-                        <tr>
-                            <th>Gross Pay</th>
-                            <th>{{ gross | int }}</th>
-                        </tr>
-                    </table>
-                </div>
-            </div>
+            <table>
+                <tr>
+                    <th>Earning</th>
+                    <th>Amount</th>
+                </tr>
+                {% for key, value in earnings.items() %}
+                <tr>
+                    <td>{{ key.replace("_", " ").capitalize() }}</td>
+                    <td>{{ value | int }}</td>
+                </tr>
+                {% endfor %}
+                <tr>
+                    <th>Gross Pay</th>
+                    <th>{{ gross | int }}</th>
+                </tr>
+            </table>
         </div>
 
         <!-- Deductions Section -->
