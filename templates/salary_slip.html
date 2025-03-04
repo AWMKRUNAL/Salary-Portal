@@ -197,12 +197,11 @@
     <div class="container">
         <div class="header">
             <div class="header-left">
-                <img src="https://companieslogo.com/img/orig/ADANIPOWER.NS-1427c780.png?download-true.png"
-                     alt="Adani Logo" class="logo">
+
             </div>
             <div class="header-right">
                 <h1>Adani Resources Private Limited</h1>
-                <p>Gare Pelma III Collieries Limited</p>
+                <p>Site Office - Gare Pelma III Collieries Limited</p>
                 <p>Service Building, Near Banjari Mandir, Milupara</p>
                 <p>Tehshil - Tamnar, Dist - Raigarh (C.G.) 496107</p>
             </div>
@@ -302,6 +301,26 @@
         </tr>
     </table>
 </div>
+       <!-- Leave Balance Section -->
+   <div class="section">
+       <div class="section-title">Leave Balance</div>
+       <table>
+           <tr>
+               <th>Leave Type</th>
+               <th>Balance</th>
+           </tr>
+           {% for leave_type, balance in leave_balance.items() %}
+           <tr>
+               <td>{{ leave_type }}</td>
+               <td>{{ balance }}</td>
+           </tr>
+           {% endfor %}
+           <tr>
+               <th>Total Leave Balance</th>
+               <th>{{ leave_balance_total }}</th>
+           </tr>
+       </table>
+   </div>
 
         <!-- Print Button -->
         <button class="print-btn" onclick="printPage()">Print</button>
