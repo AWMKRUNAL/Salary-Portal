@@ -167,7 +167,10 @@ def generate_salary_slip(emp_code, month, file_path, upload_folder):
             "cmpf": "CMPF",
             "family pension fund": "Family Pension Fund",
             "epf": "EPF",
-            "account no.": "Account Number"
+            "account no.": "Account Number",
+            "sick leave" : "Sick Leave",
+            "casual leave": "Casual Leave",
+            "privilege leave": "Privilege Leave"
         }
 
         # ------- Employee Details -------
@@ -212,6 +215,14 @@ def generate_salary_slip(emp_code, month, file_path, upload_folder):
         net_pay_text_2 = f"{gross_pay} - {total_deductions} = {net_pay}"
         net_pay_text_3 = f"{net_pay}"
 
+        # ------- Leave Balance -------
+        leave_balance_columns = ["sick leave", "casual leave", "privilege leave"]
+        leave_balance = {
+            FIELD_DISPLAY_NAMES.get(col.lower(), col.capitalize()): int(float(emp_data.get(col, 0)))
+            for col in leave_balance_columns
+        }
+        leave_balance_total = sum(leave_balance.values())  # Total leave balance
+
         # ------- Generate HTML using Jinja template -------
         html_content = render_template(
             "salary_slip.html",
@@ -222,7 +233,10 @@ def generate_salary_slip(emp_code, month, file_path, upload_folder):
             net_pay_text_1=net_pay_text_1,
             net_pay_text_2=net_pay_text_2,
             net_pay_text_3=net_pay_text_3,
-            net_pay=net_pay
+            net_pay=net_pay,
+            leave_balance = leave_balance,
+            leave_balance_total=leave_balance_total
+            
         )
 
         # Save HTML file
